@@ -27,23 +27,22 @@ import (
 	"github.com/0x51-dev/upeg/parser/op"
 )
 
-var debugLogger = log.New(os.Stdout, "[CONV-COMMIT DEBUG]", 0)
-var logger = log.New(os.Stderr, "[CONV-COMMIT ERR]", 0)
+var debugLogger = log.New(os.Stdout, "[CONV-COMMIT DEBUG] ", 0)
+var debugMode = os.Getenv("CONV_COMMIT_HOOK_DEBUG") == "true"
+var errLogger = log.New(os.Stderr, "[CONV-COMMIT ERROR] ", 0)
 
 func main() {
-	debugMode := os.Getenv("CONV_COMMIT_HOOK_DEBUG") == "true"
-
 	args := os.Args[1:]
 	if len(args) != 1 {
-		logger.Fatal("Wrong number of args passed to hook, is it installed correctly?")
+		errLogger.Fatal("Wrong number of args passed to hook, is it installed correctly?")
 	}
 	commitMessage, err := os.ReadFile(args[0])
 	if err != nil {
-		logger.Fatal(err)
+		errLogger.Fatal(err)
 	}
 	p, err := parser.New([]rune(string(commitMessage)))
 	if err != nil {
-		logger.Fatal(err)
+		errLogger.Fatal(err)
 	}
 
 	// (1)
@@ -52,7 +51,7 @@ func main() {
 		if debugMode {
 			debugLogger.Print(err)
 		}
-		logger.Fatal("(1) Commit does NOT start with a noun.")
+		errLogger.Fatal("(1) Commit does NOT start with a noun.")
 	}
 
 	// (4)
@@ -64,7 +63,7 @@ func main() {
 		if debugMode {
 			debugLogger.Print(err)
 		}
-		logger.Fatal("(4) Invalid scope, should be `(ALPHA*)`.")
+		errLogger.Fatal("(4) Invalid scope, should be `(ALPHA*)`.")
 	}
 
 	// (1)
@@ -72,7 +71,7 @@ func main() {
 		if debugMode {
 			debugLogger.Print(err)
 		}
-		logger.Fatal("(1) Commit does NOT end with a terminal colon and space.")
+		errLogger.Fatal("(1) Commit does NOT end with a terminal colon and space.")
 	}
 
 	// (5)
@@ -87,6 +86,6 @@ func main() {
 		if debugMode {
 			debugLogger.Print(err)
 		}
-		logger.Fatal("(5) A description MUST immediately follow the colon and space.")
+		errLogger.Fatal("(5) A description MUST immediately follow the colon and space.")
 	}
 }

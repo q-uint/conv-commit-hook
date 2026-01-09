@@ -3,7 +3,9 @@
 ## Building
 
 ```sh
-go build -o commit-msg github.com/q-uint/conv-commit-hook
+go build -o pre-commit github.com/q-uint/conv-commit-hook/branch
+# cp pre-commit ./.git/hooks/
+go build -o commit-msg github.com/q-uint/conv-commit-hook/commit
 # cp commit-msg ./.git/hooks/
 ```
 
@@ -15,11 +17,12 @@ We can make use of Git's [Template Directory](https://git-scm.com/docs/git-init#
 mkdir -p ~/.git_template/hooks
 git config --global init.templatedir '~/.git_template'
 # cp commit-msg ~/.git_template/hooks/
+# cp pre-commit ~/.git_template/hooks/
 ```
 
 If a repository is already initialized, you can just use `git init`.
 
-## Supported
+## Specification Rules
 
 ### 01. Commits MUST be prefixed with a type, which consists of a noun, feat, fix, etc., followed by the OPTIONAL scope, OPTIONAL !, and REQUIRED terminal colon and space.
 
@@ -94,7 +97,8 @@ Possible Extensions (TODO): make this non-optional, for better commit messages?
 ## References
 
 - Conventional Commits, available under the CC BY 3.0 license, [conventionalcommits.org](https://www.conventionalcommits.org/en/v1.0.0/#specification).
-- [Git Hooks](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks)
+- Conventional Branch, available under the CC BY 4.0 license, [conventional-branch.github.io](https://conventional-branch.github.io/#specification).
+- [Git Hooks](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks).
 
 ## License
 
