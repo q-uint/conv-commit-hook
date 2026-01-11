@@ -39,7 +39,7 @@ func main() {
 		logger.Println("`git` not found")
 		return // Skip this hook
 	}
-	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
+	cmd := exec.Command("git", "symbolic-ref", "--short", "HEAD")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		errLogger.Fatalf(`could not get branch: %s`, err)
