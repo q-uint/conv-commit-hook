@@ -38,6 +38,13 @@ func main() {
 
 	// (1)
 	noun := op.OneOrMore{Value: core.ALPHA}
+	scopeNoun := op.And{
+		core.ALPHA,
+		op.ZeroOrMore{Value: op.Or{
+			core.ALPHA,
+			op.And{'-', core.ALPHA},
+		}},
+	}
 	if _, err := p.Match(noun); err != nil {
 		if debugMode {
 			debugLogger.Print(err)
@@ -47,7 +54,7 @@ func main() {
 
 	// (4)
 	if _, err := p.Match(op.And{
-		op.Optional{Value: op.And{'(', noun, ')'}},
+		op.Optional{Value: op.And{'(', scopeNoun, ')'}},
 		op.Optional{Value: '!'},
 		op.Peek{Value: ":"}, // Check up until the terminal colon.
 	}); err != nil {

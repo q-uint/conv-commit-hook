@@ -10,35 +10,17 @@
 package main
 
 import (
-	"log"
-	"os"
-	"os/exec"
-	"strings"
+	"testing"
 
 	"github.com/0x51-dev/upeg/abnf/core"
 	"github.com/0x51-dev/upeg/parser"
 	"github.com/0x51-dev/upeg/parser/op"
 )
 
-var logger = log.New(os.Stdout, "[CONV-COMMIT INFO] ", 0)
-var debugLogger = log.New(os.Stdout, "[CONV-COMMIT DEBUG] ", 0)
-var debugMode = os.Getenv("CONV_COMMIT_HOOK_DEBUG") == "true"
-var errLogger = log.New(os.Stderr, "[CONV-COMMIT ERROR] ", 0)
-
-func main() {
-	if _, err := exec.LookPath("git"); err != nil {
-		logger.Println("`git` not found")
-		return // Skip this hook
-	}
-	cmd := exec.Command("git", "symbolic-ref", "--short", "HEAD")
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		errLogger.Fatalf(`could not get branch: %s`, err)
-	}
-	branch := strings.TrimSpace(string(out))
+func validateBranch(branch string) error {
 	p, err := parser.New([]rune(branch))
 	if err != nil {
-		errLogger.Fatal(err)
+		return err
 	}
 
 	alphaNum := append(core.ALPHA, core.DIGIT)
@@ -50,17 +32,38 @@ func main() {
 			op.And{special, op.Peek{Value: op.Not{Value: special}}},
 		)},
 	}
-	if _, err := p.MatchEOF(op.And{
+	_, err = p.MatchEOF(op.And{
 		noun,
 		op.ZeroOrMore{
 			Value: op.And{
 				'/', noun,
 			},
 		},
-	}); err != nil {
-		if debugMode {
-			debugLogger.Print(err)
-		}
-		errLogger.Fatalf("invalid branch name: %s", branch)
+	})
+	return err
+}
+
+func TestBranchName(t *testing.T) {
+	tests := []struct {
+		name    string
+		branch  string
+		wantErr bool
+	}{
+		{"simple", "main", false},
+		{"with hyphen", "feat-something", false},
+		{"one slash", "feat/something", false},
+		{"two slashes", "quint/feat/some-feat", false},
+		{"three slashes", "org/quint/feat/some-feat", false},
+		{"consecutive hyphens", "feat--bug", true},
+		{"consecutive dots", "feat..bug", true},
+		{"starts with hyphen", "-invalid", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateBranch(tt.branch)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("branch=%q: got err=%v, wantErr=%v", tt.branch, err, tt.wantErr)
+			}
+		})
 	}
 }
